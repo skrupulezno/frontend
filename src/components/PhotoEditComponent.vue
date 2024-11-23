@@ -55,43 +55,51 @@
         />
       </div>
     </div>
-    <div class="container">
-      <div
-        class="row"
-        v-for="(value, index) in responseEntries"
-        :key="index"
-      >
+    <div class="photo-response">
+      <div class="container">
         <div
-          class="small-square"
-          :style="{ backgroundColor: value.smallColor }"
-        ></div>
-        <div class="label">{{ getLabel(value.key) }}</div>
-        <input v-model="value.inputValue" />
-        <button
-          class="delete-button"
-          @click="deleteRow(value.key)"
+          class="row"
+          v-for="(value, index) in responseEntries"
+          :key="index"
         >
-          ×
-        </button>
-      </div>
-      <div
-        class="row"
-        v-for="key in ['product', 'inn']"
-        :key="key"
-      >
+          <div
+            class="small-square"
+            :style="{ backgroundColor: value.smallColor }"
+          ></div>
+          <div class="label">{{ getLabel(value.key) }}</div>
+          <input v-model="value.inputValue" />
+          <button
+            class="delete-button"
+            @click="deleteRow(value.key)"
+          >
+            ×
+          </button>
+        </div>
         <div
-          class="small-square"
-          :style="{ backgroundColor: getColorForKey(key) }"
-        ></div>
-        <div class="label">{{ getLabel(key) }}</div>
-        <input v-model="newFields[key]" />
-        <button
-          class="delete-button"
-          @click="deleteNewField(key)"
+          class="row"
+          v-for="key in ['product', 'inn']"
+          :key="key"
         >
-          ×
-        </button>
+          <div
+            class="small-square"
+            :style="{ backgroundColor: getColorForKey(key) }"
+          ></div>
+          <div class="label">{{ getLabel(key) }}</div>
+          <input v-model="newFields[key]" />
+          <button
+            class="delete-button"
+            @click="deleteNewField(key)"
+          >
+            ×
+          </button>
+        </div>
       </div>
+      <button
+        class="table-button"
+        @click=""
+      >
+        Экспорт в таблицы
+      </button>
     </div>
   </div>
 </template>
@@ -154,7 +162,6 @@ function goToPhoto(index) {
 }
 
 function getLabel(key) {
-  console.log(key);
   const labels = {
     total: 'Сумма',
     date: 'Дата',
@@ -166,14 +173,25 @@ function getLabel(key) {
   return labels[key] || key;
 }
 
+// Объект для хранения цветов ключей
+const keyColors = reactive({});
+
+// Функция для получения или назначения цвета ключу
+function getColorForKey(key) {
+  if (!keyColors[key]) {
+    keyColors[key] = getRandomColor();
+  }
+  return keyColors[key];
+}
+
 const responseEntries = computed(() => {
   const entries = [];
   if (currentPhoto.value && currentPhoto.value.response) {
     for (const [key, value] of Object.entries(currentPhoto.value.response)) {
       entries.push({
         key,
-        smallColor: getRandomColor(),
-        largeColor: getRandomColor(),
+        smallColor: getColorForKey(key),
+        largeColor: getColorForKey(key),
         inputValue: value
       });
     }
@@ -205,6 +223,9 @@ function getRandomColor() {
 </script>
 
 <style scoped>
+.table-button {
+}
+
 .photo-response {
   padding: 35px 50px;
   width: 350px;
