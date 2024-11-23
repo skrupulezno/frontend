@@ -55,30 +55,49 @@
         />
       </div>
     </div>
-    <div class="photo-response">
-      <div v-if="currentPhoto.response">
-        <table>
-          <tr
-            v-for="(value, key) in currentPhoto.response"
-            :key="key"
-          >
-            <td>
-              <div class="color"></div>
-              {{ key }}
-            </td>
-            <td>{{ value }}</td>
-          </tr>
-        </table>
+    <div class="container">
+      <div
+        class="row"
+        v-for="(value, index) in responseEntries"
+        :key="index"
+      >
+        <div
+          class="small-square"
+          :style="{ backgroundColor: value.smallColor }"
+        ></div>
+        <div class="label">{{ getLabel(value.key) }}</div>
+        <input v-model="value.inputValue" />
+        <button
+          class="delete-button"
+          @click="deleteRow(value.key)"
+        >
+          ×
+        </button>
       </div>
-      <div v-else>
-        <p>Нет данных.</p>
+      <div
+        class="row"
+        v-for="key in ['product', 'inn']"
+        :key="key"
+      >
+        <div
+          class="small-square"
+          :style="{ backgroundColor: getColorForKey(key) }"
+        ></div>
+        <div class="label">{{ getLabel(key) }}</div>
+        <input v-model="newFields[key]" />
+        <button
+          class="delete-button"
+          @click="deleteNewField(key)"
+        >
+          ×
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, reactive, ref } from 'vue';
 
 import { usePhotoStore } from '../stores/photo.store';
 
@@ -133,12 +152,127 @@ function cropPhoto() {
 function goToPhoto(index) {
   currentIndex.value = index;
 }
+
+function getLabel(key) {
+  console.log(key);
+  const labels = {
+    total: 'Сумма',
+    date: 'Дата',
+    address: 'Адрес',
+    company: 'Компания',
+    product: 'Товар',
+    inn: 'ИНН'
+  };
+  return labels[key] || key;
+}
+
+const responseEntries = computed(() => {
+  const entries = [];
+  if (currentPhoto.value && currentPhoto.value.response) {
+    for (const [key, value] of Object.entries(currentPhoto.value.response)) {
+      entries.push({
+        key,
+        smallColor: getRandomColor(),
+        largeColor: getRandomColor(),
+        inputValue: value
+      });
+    }
+  }
+  return entries;
+});
+
+const newFields = reactive({
+  product: '',
+  inn: ''
+});
+
+function deleteRow(key) {
+  delete currentPhoto.value.response[key];
+}
+
+function deleteNewField(key) {
+  newFields[key] = '';
+}
+
+function getRandomColor() {
+  const letters = '0123456789ABCDEF';
+  let color = '#';
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
 </script>
 
 <style scoped>
 .photo-response {
   padding: 35px 50px;
   width: 350px;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.small-square {
+  width: 12px;
+  height: 24px;
+  border-radius: 3px;
+}
+
+.large-square {
+  width: 24px;
+  height: 24px;
+  border-radius: 3px;
+}
+
+.label {
+  flex: 1;
+}
+
+input {
+  flex: 1;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+}
+
+.delete-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  color: #666462;
+}
+
+.delete-button:hover {
+  color: red;
+}
+
+.color-box {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+}
+
+.label {
+  flex: 1;
+}
+
+select {
+  flex: 1;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
 }
 
 button {
