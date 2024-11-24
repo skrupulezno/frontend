@@ -1,4 +1,5 @@
 <template>
+  <HeaderComponent></HeaderComponent>
   <div class="export-table-container">
     <h1>Экспортированные таблицы</h1>
     <table>
@@ -36,6 +37,7 @@
 import { computed } from 'vue';
 import * as XLSX from 'xlsx';
 
+import HeaderComponent from '../components/HeaderComponent.vue';
 import { usePhotoStore } from '../stores/photo.store';
 
 const photoStore = usePhotoStore();
