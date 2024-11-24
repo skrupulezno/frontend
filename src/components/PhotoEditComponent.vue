@@ -96,7 +96,7 @@
       </div>
       <button
         class="table-button"
-        @click=""
+        @click="exportTables"
       >
         Экспорт в таблицы
       </button>
@@ -106,8 +106,11 @@
 
 <script setup>
 import { computed, reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 import { usePhotoStore } from '../stores/photo.store';
+
+const router = useRouter();
 
 const photoStore = usePhotoStore();
 const photos = photoStore.photos;
@@ -122,6 +125,10 @@ const visiblePhotos = computed(() => {
   const end = Math.min(photos.length, currentIndex.value + 4);
   return photos.slice(start, end);
 });
+
+function exportTables() {
+  router.push('/table');
+}
 
 function nextPhoto() {
   if (currentIndex.value < photos.length - 1) {
@@ -398,7 +405,7 @@ button {
 
 .photo-area img {
   max-width: 500px;
-  max-height: 500px;
+  max-height: 700px;
   transition: transform 0.3s ease;
 }
 </style>
