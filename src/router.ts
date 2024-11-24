@@ -4,6 +4,7 @@ import AuthPage from './pages/AuthPage.vue';
 import HomePage from './pages/HomePage.vue';
 import LandingPage from './pages/LandingPage.vue';
 import PhotoEditorPage from './pages/PhotoEditorPage.vue';
+import TablePage from './pages/TablePage.vue';
 import { useAuthStore } from './stores/auth.store';
 
 const routes: Array<RouteRecordRaw> = [
@@ -15,7 +16,11 @@ const routes: Array<RouteRecordRaw> = [
     name: 'PhotoEditorPage',
     component: PhotoEditorPage
   },
-  // Добавляем маршрут для всех остальных путей
+  {
+    path: '/table',
+    name: 'TablePage',
+    component: TablePage
+  },
   {
     path: '/:catchAll(.*)',
     redirect: '/scan'

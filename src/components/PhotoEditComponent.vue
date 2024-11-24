@@ -2,6 +2,7 @@
   <div class="photo-results-container">
     <div class="photo-editor">
       <div class="photo-controls">
+        <!-- Existing Buttons -->
         <button
           @click="nextPhoto"
           :disabled="currentIndex === photos.length - 1"
@@ -16,6 +17,8 @@
         </button>
         <button @click="rotatePhoto">Повернуть</button>
         <button @click="savePhoto">Сохранить</button>
+
+        <!-- Photo Navigation -->
         <div class="photo-navigation">
           <button
             @click="prevPhoto"
@@ -24,7 +27,6 @@
           >
             &#8592;
           </button>
-
           <div class="photo-circles">
             <span
               v-for="(photo, index) in visiblePhotos"
@@ -43,10 +45,14 @@
             &#8594;
           </button>
         </div>
+
+        <!-- More Buttons -->
         <button @click="cropPhoto">Обрезать</button>
         <button @click="zoomPhoto">Масштаб</button>
         <button @click="openSettings">Настройка</button>
       </div>
+
+      <!-- Photo Display Area -->
       <div class="photo-area">
         <img
           :src="currentPhoto.preview"
@@ -55,8 +61,11 @@
         />
       </div>
     </div>
+
+    <!-- Response Entries and Export Button -->
     <div class="photo-response">
       <div class="container">
+        <!-- Existing Response Rows -->
         <div
           class="row"
           v-for="(value, index) in responseEntries"
@@ -67,7 +76,7 @@
             :style="{ backgroundColor: value.smallColor }"
           ></div>
           <div class="label">{{ getLabel(value.key) }}</div>
-          <input v-model="value.inputValue" />
+          <input v-model="currentPhoto.response[value.key]" />
           <button
             class="delete-button"
             @click="deleteRow(value.key)"
@@ -75,6 +84,8 @@
             ×
           </button>
         </div>
+
+        <!-- Predefined Fields: Product and INN -->
         <div
           class="row"
           v-for="key in ['product', 'inn']"
@@ -85,7 +96,7 @@
             :style="{ backgroundColor: getColorForKey(key) }"
           ></div>
           <div class="label">{{ getLabel(key) }}</div>
-          <input v-model="newFields[key]" />
+          <input v-model="currentPhoto.response[key]" />
           <button
             class="delete-button"
             @click="deleteNewField(key)"
@@ -94,9 +105,11 @@
           </button>
         </div>
       </div>
+
+      <!-- Export Button -->
       <button
         class="table-button"
-        @click=""
+        @click="exportTables"
       >
         Экспорт в таблицы
       </button>
@@ -106,15 +119,21 @@
 
 <script setup>
 import { computed, reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 import { usePhotoStore } from '../stores/photo.store';
 
+// Initialize Pinia Store and Router
 const photoStore = usePhotoStore();
+const router = useRouter();
+
+// Reactive Variables
 const photos = photoStore.photos;
 const currentIndex = ref(0);
 const image = ref(null);
 const rotationAngle = ref(0);
 
+// Computed Properties
 const currentPhoto = computed(() => photos[currentIndex.value]);
 
 const visiblePhotos = computed(() => {
@@ -123,6 +142,20 @@ const visiblePhotos = computed(() => {
   return photos.slice(start, end);
 });
 
+const responseEntries = computed(() => {
+  const entries = [];
+  if (currentPhoto.value && currentPhoto.value.response) {
+    for (const [key, value] of Object.entries(currentPhoto.value.response)) {
+      entries.push({
+        key,
+        smallColor: getColorForKey(key)
+      });
+    }
+  }
+  return entries;
+});
+
+// Methods
 function nextPhoto() {
   if (currentIndex.value < photos.length - 1) {
     currentIndex.value++;
@@ -137,7 +170,9 @@ function prevPhoto() {
 
 function rotatePhoto() {
   rotationAngle.value += 90;
-  image.value.style.transform = `rotate(${rotationAngle.value}deg)`;
+  if (image.value) {
+    image.value.style.transform = `rotate(${rotationAngle.value}deg)`;
+  }
 }
 
 function zoomPhoto() {
@@ -154,7 +189,9 @@ function savePhoto() {
 
 function cropPhoto() {
   // Basic crop functionality
-  image.value.style.clip = 'rect(50px, 150px, 150px, 50px)';
+  if (image.value) {
+    image.value.style.clip = 'rect(50px, 150px, 150px, 50px)';
+  }
 }
 
 function goToPhoto(index) {
@@ -173,43 +210,14 @@ function getLabel(key) {
   return labels[key] || key;
 }
 
-// Объект для хранения цветов ключей
+// Color Management
 const keyColors = reactive({});
 
-// Функция для получения или назначения цвета ключу
 function getColorForKey(key) {
   if (!keyColors[key]) {
     keyColors[key] = getRandomColor();
   }
   return keyColors[key];
-}
-
-const responseEntries = computed(() => {
-  const entries = [];
-  if (currentPhoto.value && currentPhoto.value.response) {
-    for (const [key, value] of Object.entries(currentPhoto.value.response)) {
-      entries.push({
-        key,
-        smallColor: getColorForKey(key),
-        largeColor: getColorForKey(key),
-        inputValue: value
-      });
-    }
-  }
-  return entries;
-});
-
-const newFields = reactive({
-  product: '',
-  inn: ''
-});
-
-function deleteRow(key) {
-  delete currentPhoto.value.response[key];
-}
-
-function deleteNewField(key) {
-  newFields[key] = '';
 }
 
 function getRandomColor() {
@@ -220,14 +228,43 @@ function getRandomColor() {
   }
   return color;
 }
+
+// Row Deletion Methods
+function deleteRow(key) {
+  photoStore.deleteResponseKey(currentIndex.value, key);
+}
+
+function deleteNewField(key) {
+  photoStore.updateResponse(currentIndex.value, key, '');
+}
+
+// Navigation to Export Page
+function exportTables() {
+  router.push('/export-table');
+}
 </script>
 
 <style scoped>
 .table-button {
+  background-color: #ff0032;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  align-self: center;
+  margin-top: 167px;
+  font-size: 20px;
+  font-weight: 500;
+  border-radius: 4px;
+  color: #fff;
+  width: 224px;
+  height: 46px;
 }
 
 .photo-response {
   padding: 35px 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   width: 350px;
 }
 
@@ -235,6 +272,7 @@ function getRandomColor() {
   display: flex;
   flex-direction: column;
   gap: 15px;
+  flex: 1;
 }
 
 .row {
@@ -245,12 +283,6 @@ function getRandomColor() {
 
 .small-square {
   width: 12px;
-  height: 24px;
-  border-radius: 3px;
-}
-
-.large-square {
-  width: 24px;
   height: 24px;
   border-radius: 3px;
 }
@@ -277,30 +309,6 @@ input {
 
 .delete-button:hover {
   color: red;
-}
-
-.color-box {
-  width: 20px;
-  height: 20px;
-  border-radius: 3px;
-}
-
-.label {
-  flex: 1;
-}
-
-select {
-  flex: 1;
-  padding: 5px;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-}
-
-button {
-  border: none;
-  font-size: 14px;
-  color: #666462;
-  background-color: transparent;
 }
 
 .photo-editor {
